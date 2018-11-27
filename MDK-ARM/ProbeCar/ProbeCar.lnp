@@ -1,0 +1,26 @@
+--cpu Cortex-M3
+"probecar\startup_stm32f103xe.o"
+"probecar\main.o"
+"probecar\gpio.o"
+"probecar\tim.o"
+"probecar\usart.o"
+"probecar\stm32f1xx_it.o"
+"probecar\stm32f1xx_hal_msp.o"
+"probecar\stm32f1xx_hal_gpio_ex.o"
+"probecar\stm32f1xx_hal_tim.o"
+"probecar\stm32f1xx_hal_tim_ex.o"
+"probecar\stm32f1xx_hal_uart.o"
+"probecar\stm32f1xx_hal.o"
+"probecar\stm32f1xx_hal_rcc.o"
+"probecar\stm32f1xx_hal_rcc_ex.o"
+"probecar\stm32f1xx_hal_gpio.o"
+"probecar\stm32f1xx_hal_dma.o"
+"probecar\stm32f1xx_hal_cortex.o"
+"probecar\stm32f1xx_hal_pwr.o"
+"probecar\stm32f1xx_hal_flash.o"
+"probecar\stm32f1xx_hal_flash_ex.o"
+"probecar\system_stm32f1xx.o"
+--library_type=microlib --strict --scatter "ProbeCar\ProbeCar.sct"
+--summary_stderr --info summarysizes --map --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "ProbeCar.map" -o ProbeCar\ProbeCar.axf
