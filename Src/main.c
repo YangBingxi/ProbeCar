@@ -57,6 +57,9 @@ uint8_t Uart1_Rx_Cnt = 0;		                //接收缓冲计数
 uint8_t aRxBuffer_2;			                  //接收中断缓冲
 uint8_t Uart2_RxBuff[256];		              //接收缓冲
 uint8_t Uart2_Rx_Cnt = 0;		                //接收缓冲计数
+uint8_t aRxBuffer_3;			                  //接收中断缓冲
+uint8_t Uart3_RxBuff[256];		              //接收缓冲
+uint8_t Uart3_Rx_Cnt = 0;		                //接收缓冲计数
 
 uint8_t     TIM4CH1_CAPTURE_STA=0X80;		    //输入捕获状态		    				
 uint32_t	  TIM1_COUNTER_VAL[100];	        //定时器1计数组
@@ -123,9 +126,11 @@ int main(void)
   MX_TIM6_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 	HAL_UART_Receive_IT(&huart1, (uint8_t *)&aRxBuffer_1, 1);   //开启串口接收中断
-	HAL_UART_Receive_IT(&huart1, (uint8_t *)&aRxBuffer_2, 1);   //开启串口接收中断
+	HAL_UART_Receive_IT(&huart2, (uint8_t *)&aRxBuffer_2, 1);   //开启串口接收中断
+	HAL_UART_Receive_IT(&huart3, (uint8_t *)&aRxBuffer_3, 1);   //开启串口接收中断
 
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);                  //使能PWM波
   HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);                  //使能PWM波 
@@ -153,9 +158,9 @@ int main(void)
         TIM2_COUNTER_Val = (float) TIM2_COUNTER_TEMP * 72/ 100;        
         TIM_FREQ = (TIM2_COUNTER_Val*6000.0)/TIM1_COUNTER_Val;
         
-        printf("TIM1:%.2f\r\n",TIM1_COUNTER_Val);
-        printf("TIM2:%.2f\r\n",TIM2_COUNTER_Val);
-        printf("FREQ:%.2fKHZ\r\n",TIM_FREQ);
+//        printf("TIM1:%.2f\r\n",TIM1_COUNTER_Val);
+//        printf("TIM2:%.2f\r\n",TIM2_COUNTER_Val);
+//        printf("FREQ:%.2fKHZ\r\n",TIM_FREQ);
         
         TIM1_COUNTER_TEMP = 0;
         TIM2_COUNTER_TEMP = 0;
@@ -299,7 +304,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 int fputc(int ch, FILE *f)
 {
-    HAL_UART_Transmit(&huart1, (uint8_t*)&ch ,1, 0xffff);
+    HAL_UART_Transmit(&huart3, (uint8_t*)&ch ,1, 0xffff);
       return ch;
 }
 /* USER CODE END 4 */
