@@ -293,7 +293,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   /* NOTE: This function Should not be modified, when the callback is needed,
            the HAL_UART_TxCpltCallback could be implemented in the user file
    */
-  printf("\r\n54555555\n");
 	if(Uart2_Rx_Cnt >= 255)                       //溢出判断
 	{ 
 		Uart2_Rx_Cnt = 0;
@@ -307,10 +306,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
       x=Uart2_Rx_Cnt;
 		if(Uart2_RxBuff[Uart2_Rx_Cnt-1] == 0xFE)    //判断结束位（拟定停止位0xFE）
 		{  
-      printf("\r\n54555555\n");
       if(Uart2_RxBuff[x]==0x66)                 //判断控制命令起始位（拟定起始位0x66）
       {
-        printf("\r\n我是串口一66\n");
+        printf("\r\n我是串口二66\n");
       }     
 			HAL_UART_Transmit(&huart2, (uint8_t *)&Uart2_RxBuff, Uart2_Rx_Cnt,0xFFFF); //将收到的信息发送出去
 			Uart2_Rx_Cnt = 0;
