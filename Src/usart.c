@@ -44,6 +44,7 @@
 
 /* USER CODE BEGIN 0 */
 #include "string.h"
+#include "control.h"
 /* USER CODE END 0 */
 
 UART_HandleTypeDef huart1;
@@ -277,10 +278,11 @@ extern uint8_t aRxBuffer_3;			                  //接收中断缓冲
 extern uint8_t Uart3_RxBuff[256];		              //接收缓冲
 extern uint8_t Uart3_Rx_Cnt;		                  //接收缓冲计数
 extern uint16_t Height;
+extern uint16_t HeightArray[12];
 uint16_t strength,check;
 uint8_t i;
 uint8_t uart3Receive[9];
-
+uint8_t HeigthContor =0;
 const uint8_t HEADER=0x59;
 
 uint8_t	cAlmStr[] = "数据溢出(大于256)\r\n";
@@ -353,10 +355,17 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
         {
           Height=uart3Receive[2]+uart3Receive[3]*256;           //计算距离值 
           strength=uart3Receive[4]+uart3Receive[5]*256;         //计算信号强度值 
-          printf("\r\nHeight=%d\n",Height);      
-          printf("\r\nstrength=: %d\n",strength);               //输出信号强度值 
+//          printf("\r\nHeight=%d\n",Height);      
+//          printf("\r\nstrength=: %d\n",strength);               //输出信号强度值 
           i = 0;
-        memset(uart3Receive,0x00,sizeof(uart3Receive));         //清空数组  
+          memset(uart3Receive,0x00,sizeof(uart3Receive));       //清空数组
+          HeightArray[HeigthContor] =  Height; 
+          HeigthContor++;
+          if(HeigthContor>12)
+          {
+            HeigthContor=0;
+            ifInsideOrOutside();
+          }
         }    
     }
     HAL_UART_Receive_IT(&huart3, (uint8_t *)&aRxBuffer_3, 1);   //开启串口接收中断

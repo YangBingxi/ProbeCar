@@ -2,6 +2,8 @@
 #define __CONTROL_H__
 #include "gpio.h"
 
+#define HeigthStd 200             //单位Cm
+
 #define InsideOrOutsideStatus_ON    HAL_GPIO_WritePin(InOrOutStatus_GPIO_Port,InOrOutStatus_Pin,GPIO_PIN_SET)                   // 输出高电平
 #define InsideOrOutsideStatus_OFF   HAL_GPIO_WritePin(InOrOutStatus_GPIO_Port,InOrOutStatus_Pin,GPIO_PIN_RESET)                 // 输出低电平
 
@@ -21,5 +23,7 @@
 
 
 void barrierScan(void);
+uint32_t filter(uint16_t *Array);
+void ifInsideOrOutside(void);
 
 #endif

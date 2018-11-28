@@ -170,6 +170,7 @@ int main(void)
         HAL_TIM_IC_Start_IT(&htim4,TIM_CHANNEL_1);
     } 
     barrierScan();                                          //障碍物状态检测
+    
     LED_TOGGLE;                                             //led翻转
     HAL_Delay(200);                                         //系统延时
     
