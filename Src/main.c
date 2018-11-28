@@ -79,7 +79,11 @@ uint16_t Height = 0;
 
 uint8_t carStatus = 0;                      //小车状态,默认停止
 uint8_t probeStatus = 0;                    //检测状态,默认无障碍
+uint8_t sendListFlag = 0;
+uint8_t sendListPage = 0;
+uint16_t List[160];
 
+uint8_t timeFlag = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -301,23 +305,26 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     }
     if(TIM6 == htim->Instance)
     {
-
+      if(timeFlag>0)
+      {
         TimeCounter++;                                      //计时变量++
                 
         if(TimeCounter==1000)
         {
-          Time_Sec++;                                       //越界清零
-          if(Time_Sec>UINT32_MAX-5)
-            Time_Sec=0;
-          TimeCounter = 0;
-          printf("\r\nTime=%d\n",Time_Sec);
+
+            Time_Sec++;                                       //越界清零
+            if(Time_Sec>UINT32_MAX-5)
+              Time_Sec=0;
+            TimeCounter = 0;
+            printf("\r\nTime=%d\n",Time_Sec);          
+          }
         }
      } 
 } 
 
 int fputc(int ch, FILE *f)
 {
-    HAL_UART_Transmit(&huart2, (uint8_t*)&ch ,1, 0xffff);
+    HAL_UART_Transmit(&huart1, (uint8_t*)&ch ,1, 0xffff);
       return ch;
 }
 /* USER CODE END 4 */
