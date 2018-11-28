@@ -6,6 +6,7 @@
 "probecar\usart.o"
 "probecar\stm32f1xx_it.o"
 "probecar\stm32f1xx_hal_msp.o"
+"probecar\control.o"
 "probecar\stm32f1xx_hal_gpio_ex.o"
 "probecar\stm32f1xx_hal_tim.o"
 "probecar\stm32f1xx_hal_tim_ex.o"

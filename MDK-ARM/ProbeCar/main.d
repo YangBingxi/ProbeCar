@@ -30,3 +30,4 @@ probecar\main.o: ../Inc/tim.h
 probecar\main.o: ../Inc/usart.h
 probecar\main.o: ../Inc/gpio.h
 probecar\main.o: ../Inc/led.h
+probecar\main.o: ../Inc/control.h

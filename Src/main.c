@@ -45,6 +45,7 @@
 
 /* USER CODE BEGIN Includes */
 #include "led.h"
+#include "control.h"
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -74,7 +75,7 @@ uint32_t	  TIM1_COUNTER_TEMP;	            //定时器1计数滤波
 uint32_t    TIM2_COUNTER_TEMP;              //定时器2计数滤波
 
 uint32_t TimeCounter = 0,Time_Sec = 0;   //定义时间相关变量
-                   
+uint16_t Height = 0;                   
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -128,7 +129,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
-	HAL_UART_Receive_IT(&huart1, (uint8_t *)&aRxBuffer_1, 1);   //开启串口接收中断
+	//HAL_UART_Receive_IT(&huart1, (uint8_t *)&aRxBuffer_1, 1);   //开启串口接收中断
 	HAL_UART_Receive_IT(&huart2, (uint8_t *)&aRxBuffer_2, 1);   //开启串口接收中断
 	HAL_UART_Receive_IT(&huart3, (uint8_t *)&aRxBuffer_3, 1);   //开启串口接收中断
 
@@ -168,6 +169,7 @@ int main(void)
         TIM4CH1_CAPTURE_STA |= 0X80;
         HAL_TIM_IC_Start_IT(&htim4,TIM_CHANNEL_1);
     } 
+    barrierScan();                                          //障碍物状态检测
     LED_TOGGLE;                                             //led翻转
     HAL_Delay(200);                                         //系统延时
     

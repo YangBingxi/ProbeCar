@@ -51,6 +51,18 @@
 
 #define Led_2_Pin GPIO_PIN_5
 #define Led_2_GPIO_Port GPIOE
+#define OutputStatus_Led_Pin GPIO_PIN_6
+#define OutputStatus_Led_GPIO_Port GPIOC
+#define OutputStatus_Forward_Pin GPIO_PIN_7
+#define OutputStatus_Forward_GPIO_Port GPIOC
+#define OutputStatus_Backward_Pin GPIO_PIN_8
+#define OutputStatus_Backward_GPIO_Port GPIOC
+#define OutputStatus_Brake_Pin GPIO_PIN_9
+#define OutputStatus_Brake_GPIO_Port GPIOC
+#define BarrierStatus_Pin GPIO_PIN_11
+#define BarrierStatus_GPIO_Port GPIOA
+#define InOrOutStatus_Pin GPIO_PIN_12
+#define InOrOutStatus_GPIO_Port GPIOA
 #define Led_1_Pin GPIO_PIN_5
 #define Led_1_GPIO_Port GPIOB
 
