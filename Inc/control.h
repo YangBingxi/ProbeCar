@@ -4,8 +4,8 @@
 
 #define HeigthStd 200             //单位Cm
 
-#define InsideOrOutsideStatus_ON    HAL_GPIO_WritePin(InOrOutStatus_GPIO_Port,InOrOutStatus_Pin,GPIO_PIN_SET)                   // 输出高电平
-#define InsideOrOutsideStatus_OFF   HAL_GPIO_WritePin(InOrOutStatus_GPIO_Port,InOrOutStatus_Pin,GPIO_PIN_RESET)                 // 输出低电平
+#define InsideOrOutsideStatus_ON    HAL_GPIO_WritePin(InsideOrOutsideStatus_GPIO_Port,InsideOrOutsideStatus_Pin,GPIO_PIN_SET)   // 输出高电平
+#define InsideOrOutsideStatus_OFF   HAL_GPIO_WritePin(InsideOrOutsideStatus_GPIO_Port,InsideOrOutsideStatus_Pin,GPIO_PIN_RESET) // 输出低电平
 
 #define OutputStatus_Brake_ON       HAL_GPIO_WritePin(OutputStatus_Brake_GPIO_Port,OutputStatus_Brake_Pin,GPIO_PIN_SET)         // 输出高电平
 #define OutputStatus_Brake_OFF      HAL_GPIO_WritePin(OutputStatus_Brake_GPIO_Port,OutputStatus_Brake_Pin,GPIO_PIN_RESET)       // 输出低电平
@@ -19,11 +19,13 @@
 #define OutputStatus_Led_ON         HAL_GPIO_WritePin(OutputStatus_Led_GPIO_Port,OutputStatus_Led_Pin,GPIO_PIN_SET)             // 输出高电平
 #define OutputStatus_Led__OFF       HAL_GPIO_WritePin(OutputStatus_Led_GPIO_Port,OutputStatus_Led_Pin,GPIO_PIN_RESET)           // 输出低电平
 
-#define BarrierStatus               HAL_GPIO_ReadPin(BarrierStatus_GPIO_Port,BarrierStatus_Pin)                            //障碍物状态检测
+#define BarrierStatus               HAL_GPIO_ReadPin(BarrierStatus_GPIO_Port,BarrierStatus_Pin)                                 //障碍物状态检测
 
 
 void barrierScan(void);
 uint32_t filter(uint16_t *Array);
 void ifInsideOrOutside(void);
+void sendEnd(void);
+void updateData(void);
 
 #endif

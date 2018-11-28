@@ -59,10 +59,12 @@
 #define OutputStatus_Backward_GPIO_Port GPIOC
 #define OutputStatus_Brake_Pin GPIO_PIN_9
 #define OutputStatus_Brake_GPIO_Port GPIOC
+#define OutputStatus_Camera_Pin GPIO_PIN_8
+#define OutputStatus_Camera_GPIO_Port GPIOA
 #define BarrierStatus_Pin GPIO_PIN_11
 #define BarrierStatus_GPIO_Port GPIOA
-#define InOrOutStatus_Pin GPIO_PIN_12
-#define InOrOutStatus_GPIO_Port GPIOA
+#define InsideOrOutsideStatus_Pin GPIO_PIN_12
+#define InsideOrOutsideStatus_GPIO_Port GPIOA
 #define Led_1_Pin GPIO_PIN_5
 #define Led_1_GPIO_Port GPIOB
 

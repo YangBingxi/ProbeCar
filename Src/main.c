@@ -74,8 +74,12 @@ static uint8_t     i;                       //数组用
 uint32_t	  TIM1_COUNTER_TEMP;	            //定时器1计数滤波
 uint32_t    TIM2_COUNTER_TEMP;              //定时器2计数滤波
 
-uint32_t TimeCounter = 0,Time_Sec = 0;   //定义时间相关变量
-uint16_t Height = 0;                   
+uint32_t TimeCounter = 0,Time_Sec = 0;      //定义时间相关变量
+uint16_t Height = 0;   
+
+uint8_t carStatus = 0;                      //小车状态,默认停止
+uint8_t probeStatus = 0;                    //检测状态,默认无障碍
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -147,7 +151,10 @@ int main(void)
 
   TIM4CH1_CAPTURE_GATE = 1;                                 //开启预设闸门
   printf("System is Ok!\n");
-  /* USER CODE END 2 */
+  sendEnd();
+  printf("page 0");                                         //初始化串口屏
+  sendEnd();
+/* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -170,7 +177,7 @@ int main(void)
         HAL_TIM_IC_Start_IT(&htim4,TIM_CHANNEL_1);
     } 
     barrierScan();                                          //障碍物状态检测
-    
+    updateData();
     LED_TOGGLE;                                             //led翻转
     HAL_Delay(200);                                         //系统延时
     
@@ -299,15 +306,18 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 
         if(TimeCounter==1000)
         {
-          Time_Sec++;
+          Time_Sec++;                                       //越界清零
+          if(Time_Sec>UINT32_MAX-5)
+            Time_Sec=0;
           TimeCounter = 0;
-         }
+          printf("\r\nTime=%d\n",Time_Sec);
+        }
      } 
 } 
 
 int fputc(int ch, FILE *f)
 {
-    HAL_UART_Transmit(&huart3, (uint8_t*)&ch ,1, 0xffff);
+    HAL_UART_Transmit(&huart2, (uint8_t*)&ch ,1, 0xffff);
       return ch;
 }
 /* USER CODE END 4 */

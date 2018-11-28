@@ -279,6 +279,7 @@ extern uint8_t Uart3_RxBuff[256];		              //接收缓冲
 extern uint8_t Uart3_Rx_Cnt;		                  //接收缓冲计数
 extern uint16_t Height;
 extern uint16_t HeightArray[12];
+extern uint8_t carStatus;
 uint16_t strength,check;
 uint8_t i;
 uint8_t uart3Receive[9];
@@ -303,7 +304,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
            the HAL_UART_TxCpltCallback could be implemented in the user file
    */
   if(huart->Instance == USART2)
-  {
+  {        
     if(Uart2_Rx_Cnt >= 255)                       //溢出判断
     { 
       Uart2_Rx_Cnt = 0;
@@ -312,19 +313,21 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     }  
     else
     {
-      Uart2_RxBuff[Uart2_Rx_Cnt++] = aRxBuffer_2;   //接收数据转存
-      if(Uart2_RxBuff[Uart2_Rx_Cnt] == 0x66)
-        x=Uart2_Rx_Cnt;
-      if(Uart2_RxBuff[Uart2_Rx_Cnt-1] == 0xFE)    //判断结束位（拟定停止位0xFE）
-      {  
-        if(Uart2_RxBuff[x]==0x66)                 //判断控制命令起始位（拟定起始位0x66）
-        {
-          printf("\r\n我是串口二66\n");
-        }     
-        HAL_UART_Transmit(&huart2, (uint8_t *)&Uart2_RxBuff, Uart2_Rx_Cnt,0xFFFF); //将收到的信息发送出去
-        Uart2_Rx_Cnt = 0;
-        memset(Uart2_RxBuff,0x00,sizeof(Uart2_RxBuff)); //清空数组      
-      }       
+      if(aRxBuffer_2==0x66)                 //判断控制命令起始位（拟定起始位0x66）
+      {
+        carStatus = 1;    //前进
+        //printf("\r\n我是串口二66\n");
+      }
+      if(aRxBuffer_2==0x67)                 //判断控制命令起始位（拟定起始位0x66）
+      {
+        carStatus = 2;    //后退
+        //printf("\r\n我是串口二67\n");
+      }        
+      if(aRxBuffer_2==0x68)                 //判断控制命令起始位（拟定起始位0x66）
+      {
+        carStatus = 3;    //刹车
+        //printf("\r\n我是串口二68\n");
+      }
     }
     HAL_UART_Receive_IT(&huart2, (uint8_t *)&aRxBuffer_2, 1);   //开启串口接收中断
   }
