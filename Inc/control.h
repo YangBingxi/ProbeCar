@@ -2,8 +2,14 @@
 #define __CONTROL_H__
 #include "gpio.h"
 
-#define HeigthStd 200             //单位Cm
-
+#define HeigthStd 200             //判断隧道内外的阈值，单位Cm
+#define UnitWheelLength 20        //单位轮子周长，单位Cm /*注：如果精度不够可在轮子上等分的多装几个磁块*/
+/*
+* 运行速度计算：单位轮子周长X霍尔传感器返回的频率
+*/
+/*
+* 运行里程计算：单位时间X单位速度 求和
+*/
 #define InsideOrOutsideStatus_ON    HAL_GPIO_WritePin(InsideOrOutsideStatus_GPIO_Port,InsideOrOutsideStatus_Pin,GPIO_PIN_SET)   // 输出高电平
 #define InsideOrOutsideStatus_OFF   HAL_GPIO_WritePin(InsideOrOutsideStatus_GPIO_Port,InsideOrOutsideStatus_Pin,GPIO_PIN_RESET) // 输出低电平
 

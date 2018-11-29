@@ -76,7 +76,7 @@ uint32_t    TIM2_COUNTER_TEMP;              //定时器2计数滤波
 
 uint32_t TimeCounter = 0,Time_Sec = 0;      //定义时间相关变量
 uint16_t Height = 0;   
-
+uint32_t carSpeed,carDistance;              //定义小车速度、小车里程
 uint8_t carStatus = 0;                      //小车状态,默认停止
 uint8_t probeStatus = 0;                    //检测状态,默认无障碍
 uint8_t sendListFlag = 0;
@@ -170,10 +170,10 @@ int main(void)
         TIM2_COUNTER_Val = (float) TIM2_COUNTER_TEMP * 72/ 100;        
         TIM_FREQ = (TIM2_COUNTER_Val*6000.0)/TIM1_COUNTER_Val;
         
-//        printf("TIM1:%.2f\r\n",TIM1_COUNTER_Val);
-//        printf("TIM2:%.2f\r\n",TIM2_COUNTER_Val);
-//        printf("FREQ:%.2fKHZ\r\n",TIM_FREQ);
-        
+        printf("TIM1:%.2f\r\n",TIM1_COUNTER_Val);
+        printf("TIM2:%.2f\r\n",TIM2_COUNTER_Val);
+        printf("FREQ:%.2fKHZ\r\n",TIM_FREQ);
+        carSpeed = (int)(TIM_FREQ*UnitWheelLength);         //测量速度：单位轮子周长X霍尔传感器返回的频率
         TIM1_COUNTER_TEMP = 0;
         TIM2_COUNTER_TEMP = 0;
         TIM4CH1_CAPTURE_STB = 0;
@@ -311,7 +311,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
                 
         if(TimeCounter==1000)
         {
-
+            carDistance+=carSpeed;
             Time_Sec++;                                       //越界清零
             if(Time_Sec>UINT32_MAX-5)
               Time_Sec=0;

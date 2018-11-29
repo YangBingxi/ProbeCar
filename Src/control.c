@@ -10,6 +10,9 @@
   *   By Sw Young 
   *   2018.11.27
   */
+extern uint32_t carSpeed,carDistance;              //定义小车速度、小车里程
+uint8_t sendListCounter = 0;
+extern uint16_t List[160];
 extern uint8_t probeStatus;                      //检测状态,默认无障碍
 void barrierScan()
 {
@@ -22,7 +25,10 @@ void barrierScan()
       OutputStatus_Led_ON;                  //打开报警灯
       OutputStatus_Camera_ON;               //触发拍照
       printf("检测到障碍物");               //串口发送信息
-    }
+      if(sendListCounter<160)
+        List[sendListCounter]=carDistance;
+      sendListCounter++;
+    }while(BarrierStatus);
   }
   else
   {
@@ -61,6 +67,7 @@ uint32_t filter(uint16_t *Array)
   *   By Sw Young 
   *   2018.11.27
   */
+
 uint16_t HeightArray[12];
 uint8_t page = 0;
 void ifInsideOrOutside(void)
@@ -121,14 +128,16 @@ extern uint32_t Time_Sec;   //定义时间相关变量
 extern uint16_t Height;
 extern uint8_t carStatus;
 extern uint8_t sendListFlag,sendListPage;
-extern uint16_t List[160];
-
 void updateData(void)
 {
   sendEnd();
   printf("t17.txt=\"%d\"",Time_Sec);
   sendEnd();
   printf("t14.txt=\"%d\"",Height);
+  sendEnd();
+  printf("t7.txt=\"%d\"",carSpeed);
+  sendEnd();
+  printf("t9.txt=\"%d\"",carDistance);
   sendEnd();
   if(carStatus==0)
   {
