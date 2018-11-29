@@ -10,7 +10,7 @@
   *   By Sw Young 
   *   2018.11.27
   */
-extern uint32_t carSpeed,carDistance;              //定义小车速度、小车里程
+extern float carSpeed,carDistance;              //定义小车速度、小车里程
 uint8_t sendListCounter = 0;
 extern uint16_t List[160];
 extern uint8_t probeStatus;                      //检测状态,默认无障碍
@@ -135,9 +135,9 @@ void updateData(void)
   sendEnd();
   printf("t14.txt=\"%d\"",Height);
   sendEnd();
-  printf("t7.txt=\"%d\"",carSpeed);
+  printf("t7.txt=\"%.2f\"",carSpeed);
   sendEnd();
-  printf("t9.txt=\"%d\"",carDistance);
+  printf("t9.txt=\"%.2f\"",carDistance);
   sendEnd();
   if(carStatus==0)
   {

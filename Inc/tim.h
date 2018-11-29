@@ -51,28 +51,45 @@
 
 /* USER CODE END Includes */
 
-extern TIM_HandleTypeDef htim1;
-extern TIM_HandleTypeDef htim2;
-extern TIM_HandleTypeDef htim3;
-extern TIM_HandleTypeDef htim4;
 extern TIM_HandleTypeDef htim5;
 extern TIM_HandleTypeDef htim6;
 
 /* USER CODE BEGIN Private defines */
+typedef struct              //测量低电平脉宽
+{   
+	uint8_t   ucFinishFlag;
+	uint8_t   ucStartFlag;
+	uint16_t  usCtr;
+	uint16_t  usPeriod;
+}STRUCT_CAPTURE;
+#define GENERAL_TIMx                        TIM5
+#define GENERAL_TIM_RCC_CLK_ENABLE()        __HAL_RCC_TIM5_CLK_ENABLE()
+#define GENERAL_TIM_RCC_CLK_DISABLE()       __HAL_RCC_TIM5_CLK_DISABLE()
+#define GENERAL_TIM_GPIO_RCC_CLK_ENABLE()   __HAL_RCC_GPIOA_CLK_ENABLE();
+#define GENERAL_TIM_CHANNELx                TIM_CHANNEL_1
+#define GENERAL_TIM_IT_CCx                  TIM_IT_CC1
 
+#define GENERAL_TIM_IRQn                    TIM5_IRQn
+#define GENERAL_TIM_IRQHANDLER              TIM5_IRQHandler
+
+#define KEY1_RCC_CLK_ENABLE()               __HAL_RCC_GPIOA_CLK_ENABLE()
+#define KEY1_GPIO_PIN                       GPIO_PIN_0
+#define KEY1_GPIO                           GPIOA
+
+// 定义定时器预分频，定时器实际时钟频率为：72MHz/（GENERAL_TIMx_PRESCALER+1）
+#define GENERAL_TIM_PRESCALER               71  // 实际时钟频率为：36kHz
+
+// 定义定时器周期，当定时器开始计数到GENERAL_TIMx_PERIOD值是更新定时器并生成对应事件和中断
+#define GENERAL_TIM_PERIOD                  0xFFFF
+
+#define GENERAL_TIM_STRAT_ICPolarity        TIM_INPUTCHANNELPOLARITY_RISING          //测量的起始边沿
+#define GENERAL_TIM_END_ICPolarity          TIM_INPUTCHANNELPOLARITY_RISING          //测量的结束边沿
 /* USER CODE END Private defines */
 
 extern void _Error_Handler(char *, int);
 
-void MX_TIM1_Init(void);
-void MX_TIM2_Init(void);
-void MX_TIM3_Init(void);
-void MX_TIM4_Init(void);
 void MX_TIM5_Init(void);
 void MX_TIM6_Init(void);
-                    
-void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-                
 
 /* USER CODE BEGIN Prototypes */
 

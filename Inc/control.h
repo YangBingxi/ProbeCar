@@ -3,7 +3,7 @@
 #include "gpio.h"
 
 #define HeigthStd 200             //判断隧道内外的阈值，单位Cm
-#define UnitWheelLength 20        //单位轮子周长，单位Cm /*注：如果精度不够可在轮子上等分的多装几个磁块*/
+#define UnitWheelLength 20.0f        //单位轮子周长，单位Cm /*注：如果精度不够可在轮子上等分的多装几个磁块*/
 /*
 * 运行速度计算：单位轮子周长X霍尔传感器返回的频率
 */

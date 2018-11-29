@@ -62,21 +62,12 @@ uint8_t aRxBuffer_3;			                  //接收中断缓冲
 uint8_t Uart3_RxBuff[256];		              //接收缓冲
 uint8_t Uart3_Rx_Cnt = 0;		                //接收缓冲计数
 
-uint8_t     TIM4CH1_CAPTURE_STA=0X80;		    //输入捕获状态		    				
-uint32_t	  TIM1_COUNTER_VAL[100];	        //定时器1计数组
-uint32_t    TIM2_COUNTER_VAL[100];          //定时器2计数组
-float	      TIM1_COUNTER_Val;	              //定时器1计数值
-float       TIM2_COUNTER_Val;               //定时器2计数值
-float       TIM_FREQ;                       //频率值
-uint8_t     TIM4CH1_CAPTURE_GATE=0;         //预设闸门标志位
-uint8_t     TIM4CH1_CAPTURE_STB=0;          //数组存满标志位
-static uint8_t     i;                       //数组用
-uint32_t	  TIM1_COUNTER_TEMP;	            //定时器1计数滤波
-uint32_t    TIM2_COUNTER_TEMP;              //定时器2计数滤波
+STRUCT_CAPTURE strCapture = { 0, 0, 0 };
+
 
 uint32_t TimeCounter = 0,Time_Sec = 0;      //定义时间相关变量
 uint16_t Height = 0;   
-uint32_t carSpeed,carDistance;              //定义小车速度、小车里程
+float carSpeed,carSpeedLast,carDistance;              //定义小车速度、小车里程
 uint8_t carStatus = 0;                      //小车状态,默认停止
 uint8_t probeStatus = 0;                    //检测状态,默认无障碍
 uint8_t sendListFlag = 0;
@@ -106,7 +97,7 @@ void SystemClock_Config(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+  uint32_t ulTmrClk, ulTime;
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -127,59 +118,51 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_TIM1_Init();
-  MX_TIM2_Init();
-  MX_TIM3_Init();
-  MX_TIM4_Init();
-  MX_TIM5_Init();
   MX_TIM6_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
+  MX_TIM5_Init();
   /* USER CODE BEGIN 2 */
 	//HAL_UART_Receive_IT(&huart1, (uint8_t *)&aRxBuffer_1, 1);   //开启串口接收中断
 	HAL_UART_Receive_IT(&huart2, (uint8_t *)&aRxBuffer_2, 1);   //开启串口接收中断
 	HAL_UART_Receive_IT(&huart3, (uint8_t *)&aRxBuffer_3, 1);   //开启串口接收中断
 
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_4);                  //使能PWM波
-  HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3);                  //使能PWM波 
-  
-  HAL_TIM_IC_Start_IT(&htim4,TIM_CHANNEL_1);                //使能TIM4输入捕获中断
-  __HAL_TIM_ENABLE_IT(&htim4, TIM_CHANNEL_1);               //使能更新中断
-  HAL_TIM_Base_Start_IT(&htim5);                            //使能TIM5定时器中断
+
 
   HAL_TIM_Base_Start_IT(&htim6);                            //使能TIM6定时器中断
   
-  __HAL_TIM_SET_COUNTER(&htim1,0);                          //定时器1清零
-  __HAL_TIM_SET_COUNTER(&htim2,0);                          //定时器2清零 
-
-  TIM4CH1_CAPTURE_GATE = 1;                                 //开启预设闸门
+  /* 获取定时器时钟周期 */	
+	ulTmrClk = HAL_RCC_GetHCLKFreq()/GENERAL_TIM_PRESCALER;    
+  /* 启动定时器 */
+  HAL_TIM_Base_Start_IT(&htim5);  
+  /* 启动定时器通道输入捕获并开启中断 */
+  HAL_TIM_IC_Start_IT(&htim5,GENERAL_TIM_CHANNELx);
+  
   printf("System is Ok!\n");
   sendEnd();
   printf("page 0");                                         //初始化串口屏
   sendEnd();
-/* USER CODE END 2 */
+  /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    if(TIM4CH1_CAPTURE_STB)
-    {        
-        TIM1_COUNTER_Val = (float) TIM1_COUNTER_TEMP * 168 / 100;
-        TIM2_COUNTER_Val = (float) TIM2_COUNTER_TEMP * 72/ 100;        
-        TIM_FREQ = (TIM2_COUNTER_Val*6000.0)/TIM1_COUNTER_Val;
-        
-        printf("TIM1:%.2f\r\n",TIM1_COUNTER_Val);
-        printf("TIM2:%.2f\r\n",TIM2_COUNTER_Val);
-        printf("FREQ:%.2fKHZ\r\n",TIM_FREQ);
-        carSpeed = (int)(TIM_FREQ*UnitWheelLength);         //测量速度：单位轮子周长X霍尔传感器返回的频率
-        TIM1_COUNTER_TEMP = 0;
-        TIM2_COUNTER_TEMP = 0;
-        TIM4CH1_CAPTURE_STB = 0;
-        TIM4CH1_CAPTURE_STA |= 0X80;
-        HAL_TIM_IC_Start_IT(&htim4,TIM_CHANNEL_1);
-    } 
+    if(strCapture.ucFinishFlag == 1 )
+		{
+      /* 计算高电平计数值 */
+			ulTime = strCapture .usPeriod * 0xFFFF + strCapture .usCtr;
+			/* 打印高电平脉宽时间 */
+			printf ( ">>测得高电平脉宽时间：%d.%d s\n", ulTime / ulTmrClk, ulTime % ulTmrClk ); 
+			carSpeed = UnitWheelLength/(ulTime / ulTmrClk+ulTime % ulTmrClk/1000000.0);
+      carSpeed/=100.0;                                        //将速度转换为m/s 
+      if(carSpeed-carSpeedLast>2||carSpeedLast-carSpeed>2)    //限幅滤波
+          carSpeed = carSpeedLast; 
+      carSpeedLast = carSpeed;  
+      printf ( ">>测得小车速度：%f\n", carSpeed);
+      strCapture .ucFinishFlag = 0;			
+		}
     barrierScan();                                          //障碍物状态检测
     updateData();
     LED_TOGGLE;                                             //led翻转
@@ -247,62 +230,63 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-//定时器TIM4输入捕获中断处理回调函数，该函数在HAL_TIM_IRQHandler中会被调用
-void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)    //捕获中断发生时执行
-{	 
-			if(TIM4CH1_CAPTURE_GATE==0)                           
-			{   
-				if(TIM4CH1_CAPTURE_STA&0X40)	                      //第二次捕获到一个上升沿 		
-				{	                      
-					TIM4CH1_CAPTURE_STA = 0X80;		                    //标记成功捕获到一次高电平脉宽
-					TIM1_COUNTER_VAL[i] = __HAL_TIM_GET_COUNTER(&htim1); //获得定时器1计数值
-					TIM2_COUNTER_VAL[i] = __HAL_TIM_GET_COUNTER(&htim2); //获得定时器2计数值
-				 
-					TIM1_COUNTER_TEMP += TIM1_COUNTER_VAL[i];
-					TIM2_COUNTER_TEMP += TIM2_COUNTER_VAL[i];
-
-					i++;
-							if(i == 100)
-							{                        
-									i = 0;
-									TIM4CH1_CAPTURE_STB = 1;
-									TIM4CH1_CAPTURE_STA = 0;
-									HAL_TIM_IC_Stop_IT(&htim4,TIM_CHANNEL_1);
-							}					
-					HAL_TIM_Base_Stop(&htim1);                        //关闭定时器1
-					HAL_TIM_Base_Stop(&htim2);                        //关闭定时器2   
-					__HAL_TIM_SET_COUNTER(&htim1,0);                  //定时器1清零
-					__HAL_TIM_SET_COUNTER(&htim2,0);                  //定时器2清零                
-
-         }
-			
-
-      }
-			if(TIM4CH1_CAPTURE_GATE==1)
-			{
-					if(TIM4CH1_CAPTURE_STA&0X80)                      //第一次捕获上升沿
-          {
-						TIM4CH1_CAPTURE_STA = 0X40;		                  //标记捕获到了上升沿
-						HAL_TIM_Base_Start(&htim1);                     //使能定时器1，对标准信号计数
-						HAL_TIM_Base_Start(&htim2);                     //使能定时器2，对被测信号计数
-          }
-       }		    
-		
+/**
+  * 函数功能: 定时器输入捕获中断回调函数
+  * 输入参数: htim：定时器句柄
+  * 返 回 值: 无
+  * 说    明: 无
+  */
+void HAL_TIM_IC_CaptureCallback(TIM_HandleTypeDef *htim)
+{
+  TIM_IC_InitTypeDef sConfigIC;
+  
+  if ( strCapture .ucStartFlag == 0 )
+  {
+    __HAL_TIM_SET_COUNTER(htim,0); // 清零定时器计数
+    strCapture .usPeriod = 0;			
+    strCapture .usCtr = 0;
+    
+    // 配置输入捕获参数，主要是修改触发电平
+    sConfigIC.ICPolarity = GENERAL_TIM_STRAT_ICPolarity;
+    sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+    sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+    sConfigIC.ICFilter = 0;
+    HAL_TIM_IC_ConfigChannel(&htim5, &sConfigIC, GENERAL_TIM_CHANNELx);
+    // 清除中断标志位
+    __HAL_TIM_CLEAR_IT(htim, GENERAL_TIM_IT_CCx);
+    // 启动输入捕获并开启中断
+    HAL_TIM_IC_Start_IT(&htim5,GENERAL_TIM_CHANNELx);    
+    strCapture .ucStartFlag = 1;			
+  }		
+  
+  else
+  {
+    // 获取定时器计数值
+    strCapture .usCtr = HAL_TIM_ReadCapturedValue(&htim5,GENERAL_TIM_CHANNELx);
+    // 配置输入捕获参数，主要是修改触发电平
+    sConfigIC.ICPolarity = GENERAL_TIM_STRAT_ICPolarity;
+    sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
+    sConfigIC.ICPrescaler = TIM_ICPSC_DIV1;
+    sConfigIC.ICFilter = 0;
+    HAL_TIM_IC_ConfigChannel(&htim5, &sConfigIC, GENERAL_TIM_CHANNELx);
+    
+    // 清除中断标志位
+    __HAL_TIM_CLEAR_IT(htim, GENERAL_TIM_IT_CCx); 
+    // 启动输入捕获并开启中断
+    HAL_TIM_IC_Start_IT(&htim5,GENERAL_TIM_CHANNELx);    
+    strCapture .ucStartFlag = 0;			
+    strCapture .ucFinishFlag = 1;    
+  }
 }
- //定时器TIM5溢出中断处理回调函数
+ //定时器TIM6溢出中断处理回调函数
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
     if(TIM5 == htim->Instance)
     {
-       if(TIM4CH1_CAPTURE_GATE)
-       {
-            TIM4CH1_CAPTURE_GATE = 0;
-       }
-       else 
-       {
-            TIM4CH1_CAPTURE_GATE = 1;
-       }
+      strCapture .usPeriod ++;
     }
+    
+    
     if(TIM6 == htim->Instance)
     {
       if(timeFlag>0)
