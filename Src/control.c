@@ -190,21 +190,23 @@ void updateData(void)
   {
     sendListFlag=0;
     sendEnd();
-    printf("t200.txt=\"%d\"",List[sendListPage*16+0]); sendEnd();
-    printf("t201.txt=\"%d\"",List[sendListPage*16+1]); sendEnd();
-    printf("t202.txt=\"%d\"",List[sendListPage*16+2]); sendEnd();
-    printf("t203.txt=\"%d\"",List[sendListPage*16+3]); sendEnd();
-    printf("t204.txt=\"%d\"",List[sendListPage*16+4]); sendEnd();
-    printf("t205.txt=\"%d\"",List[sendListPage*16+5]); sendEnd();
-    printf("t206.txt=\"%d\"",List[sendListPage*16+6]); sendEnd();
-    printf("t207.txt=\"%d\"",List[sendListPage*16+7]); sendEnd();
-    printf("t208.txt=\"%d\"",List[sendListPage*16+8]); sendEnd();
-    printf("t209.txt=\"%d\"",List[sendListPage*16+9]); sendEnd();
-    printf("t210.txt=\"%d\"",List[sendListPage*16+10]);sendEnd();
-    printf("t211.txt=\"%d\"",List[sendListPage*16+11]);sendEnd();
-    printf("t212.txt=\"%d\"",List[sendListPage*16+12]);sendEnd();
-    printf("t213.txt=\"%d\"",List[sendListPage*16+13]);sendEnd();
-    printf("t214.txt=\"%d\"",List[sendListPage*16+14]);sendEnd();
-    printf("t215.txt=\"%d\"",List[sendListPage*16+15]);sendEnd();
+    printf("t300.txt=\"%d/10\"",sendListPage); sendEnd();
+    
+    printf("t200.txt=\"1: %d\"",List[sendListPage*16+0]); sendEnd();
+    printf("t201.txt=\"2: %d\"",List[sendListPage*16+1]); sendEnd();
+    printf("t202.txt=\"3: %d\"",List[sendListPage*16+2]); sendEnd();
+    printf("t203.txt=\"4: %d\"",List[sendListPage*16+3]); sendEnd();
+    printf("t204.txt=\"5: %d\"",List[sendListPage*16+4]); sendEnd();
+    printf("t205.txt=\"6: %d\"",List[sendListPage*16+5]); sendEnd();
+    printf("t206.txt=\"7: %d\"",List[sendListPage*16+6]); sendEnd();
+    printf("t207.txt=\"8: %d\"",List[sendListPage*16+7]); sendEnd();
+    printf("t208.txt=\"9: %d\"",List[sendListPage*16+8]); sendEnd();
+    printf("t209.txt=\"10: %d\"",List[sendListPage*16+9]); sendEnd();
+    printf("t210.txt=\"11: %d\"",List[sendListPage*16+10]);sendEnd();
+    printf("t211.txt=\"12: %d\"",List[sendListPage*16+11]);sendEnd();
+    printf("t212.txt=\"13: %d\"",List[sendListPage*16+12]);sendEnd();
+    printf("t213.txt=\"14: %d\"",List[sendListPage*16+13]);sendEnd();
+    printf("t214.txt=\"15: %d\"",List[sendListPage*16+14]);sendEnd();
+    printf("t215.txt=\"16: %d\"",List[sendListPage*16+15]);sendEnd();
   }
 }
