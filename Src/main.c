@@ -67,7 +67,7 @@ STRUCT_CAPTURE strCapture = { 0, 0, 0 };
 
 uint32_t TimeCounter = 0,Time_Sec = 0;      //定义时间相关变量
 uint16_t Height = 0;   
-float carSpeed,carSpeedLast,carDistance;              //定义小车速度、小车里程
+float carSpeed,carSpeedLast,carDistance;    //定义小车速度、小车里程
 uint8_t carStatus = 0;                      //小车状态,默认停止
 uint8_t probeStatus = 0;                    //检测状态,默认无障碍
 uint8_t sendListFlag = 0;
@@ -125,12 +125,12 @@ int main(void)
   MX_TIM5_Init();
   /* USER CODE BEGIN 2 */
 	//HAL_UART_Receive_IT(&huart1, (uint8_t *)&aRxBuffer_1, 1);   //开启串口接收中断
-	HAL_UART_Receive_IT(&huart2, (uint8_t *)&aRxBuffer_2, 1);   //开启串口接收中断
-	HAL_UART_Receive_IT(&huart3, (uint8_t *)&aRxBuffer_3, 1);   //开启串口接收中断
+	HAL_UART_Receive_IT(&huart2, (uint8_t *)&aRxBuffer_2, 1);     //开启串口接收中断
+	HAL_UART_Receive_IT(&huart3, (uint8_t *)&aRxBuffer_3, 1);     //开启串口接收中断
 
 
 
-  HAL_TIM_Base_Start_IT(&htim6);                            //使能TIM6定时器中断
+  HAL_TIM_Base_Start_IT(&htim6);                                //使能TIM6定时器中断
   
   /* 获取定时器时钟周期 */	
 	ulTmrClk = HAL_RCC_GetHCLKFreq()/GENERAL_TIM_PRESCALER;    
@@ -141,7 +141,7 @@ int main(void)
   
   printf("System is Ok!\n");
   sendEnd();
-  printf("page 0");                                         //初始化串口屏
+  printf("page 0");                                             //初始化串口屏
   sendEnd();
   /* USER CODE END 2 */
 
@@ -156,17 +156,17 @@ int main(void)
 			/* 打印高电平脉宽时间 */
 			printf ( ">>测得高电平脉宽时间：%d.%d s\n", ulTime / ulTmrClk, ulTime % ulTmrClk ); 
 			carSpeed = UnitWheelLength/(ulTime / ulTmrClk+ulTime % ulTmrClk/1000000.0);
-      carSpeed/=100.0;                                        //将速度转换为m/s 
-      if(carSpeed-carSpeedLast>2||carSpeedLast-carSpeed>2)    //限幅滤波
+      carSpeed/=100.0;                                          //将速度转换为m/s 
+      if(carSpeed-carSpeedLast>2||carSpeedLast-carSpeed>2)      //限幅滤波
           carSpeed = carSpeedLast; 
       carSpeedLast = carSpeed;  
       printf ( ">>测得小车速度：%f\n", carSpeed);
       strCapture .ucFinishFlag = 0;			
 		}
-    barrierScan();                                          //障碍物状态检测
+    barrierScan();                                              //障碍物状态检测
     updateData();
-    LED_TOGGLE;                                             //led翻转
-    HAL_Delay(200);                                         //系统延时
+    LED_TOGGLE;                                                 //led翻转
+    HAL_Delay(200);                                             //系统延时
     
 
 
@@ -291,12 +291,12 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     {
       if(timeFlag>0)
       {
-        TimeCounter++;                                      //计时变量++
+        TimeCounter++;                                          //计时变量++
                 
         if(TimeCounter==1000)
         {
             carDistance+=carSpeed;
-            Time_Sec++;                                       //越界清零
+            Time_Sec++;                                         //越界清零
             if(Time_Sec>UINT32_MAX-5)
               Time_Sec=0;
             TimeCounter = 0;

@@ -10,10 +10,10 @@
   *   By Sw Young 
   *   2018.11.27
   */
-extern float carSpeed,carDistance;              //定义小车速度、小车里程
+extern float carSpeed,carDistance;          //定义小车速度、小车里程
 uint8_t sendListCounter = 0;
-extern uint16_t List[160];
-extern uint8_t probeStatus;                      //检测状态,默认无障碍
+extern uint16_t List[160];                  //障碍物位置存储列表
+extern uint8_t probeStatus;                 //检测状态,默认无障碍
 void barrierScan()
 {
   if(BarrierStatus)
@@ -24,17 +24,27 @@ void barrierScan()
       probeStatus = 1;                      //检测状态,有障碍
       OutputStatus_Led_ON;                  //打开报警灯
       OutputStatus_Camera_ON;               //触发拍照
-      printf("检测到障碍物");               //串口发送信息
+      //printf("检测到障碍物");             //串口发送信息
+      sendEnd();
+      printf("t5.pco=63488");
+      sendEnd();
+      printf("t5.txt=\"有障碍\"");
+      sendEnd();
       if(sendListCounter<160)
-        List[sendListCounter]=carDistance;
+        List[sendListCounter]=carDistance;   //存储障碍物位置
       sendListCounter++;
     }while(BarrierStatus);
   }
   else
   {
+    sendEnd();
+    printf("t5.pco=2016");
+    sendEnd();
+    printf("t5.txt=\"无障碍\"");
+    sendEnd(); 
     probeStatus = 0;                        //检测状态,无障碍
     OutputStatus_Led_OFF;                   //关闭报警灯
-    OutputStatus_Camera_ON;                 //关闭触发拍照
+    OutputStatus_Camera_OFF;                //关闭触发拍照
   }
     
 }
@@ -77,7 +87,7 @@ void ifInsideOrOutside(void)
   //printf("\r\nHeigth_temp=%d\n",Heigth_temp);
   if(Heigth_temp>HeigthStd)
   {
-    InsideOrOutsideStatus_ON;   //判断在隧道外
+    InsideOrOutsideStatus_ON;   //在隧道外
     printf("\r\n隧道外");
     if(page!=1)
     {
@@ -89,7 +99,7 @@ void ifInsideOrOutside(void)
 
   }else
   {
-    InsideOrOutsideStatus_OFF;  //判断在隧道内
+    InsideOrOutsideStatus_OFF;  //在隧道内
     printf("\r\n隧道内");
     if(page!=2)
     {
@@ -117,7 +127,7 @@ void sendEnd(void)
 
 /**
   * 函 数 名: updateData
-  * 函数功能: 更新数据函数 
+  * 函数功能: 更新串口屏数据函数 
   * 输入参数: 无
   * 返 回 值: 无
   * 说    明: 无
@@ -131,15 +141,15 @@ extern uint8_t sendListFlag,sendListPage;
 void updateData(void)
 {
   sendEnd();
-  printf("t17.txt=\"%d\"",Time_Sec);
+  printf("t17.txt=\"%d\"",Time_Sec);         //更新运行时间
   sendEnd();
-  printf("t14.txt=\"%d\"",Height);
+  printf("t14.txt=\"%d\"",Height);           //更新监测高度
   sendEnd();
-  printf("t7.txt=\"%.2f\"",carSpeed);
+  printf("t7.txt=\"%.2f\"",carSpeed);        //更新小车速度
   sendEnd();
-  printf("t9.txt=\"%.2f\"",carDistance);
+  printf("t9.txt=\"%.2f\"",carDistance);     //更新小车行驶里程
   sendEnd();
-  if(carStatus==0)
+  if(carStatus==0)                           //更新小车运行状态
   {
     sendEnd();
     printf("t2.txt=\"停止\"");
@@ -170,23 +180,8 @@ void updateData(void)
     OutputStatus_Forward_OFF;
     OutputStatus_Backward_OFF;
   }
-  if(probeStatus==1)
-  {
-    sendEnd();
-    printf("t5.pco=63488");
-    sendEnd();
-    printf("t5.txt=\"有障碍\"");
-    sendEnd();
-  } 
-  else
-  {
-    sendEnd();
-    printf("t5.pco=2016");
-    sendEnd();
-    printf("t5.txt=\"无障碍\"");
-    sendEnd();  
-  }
-  if(sendListFlag==1)
+
+  if(sendListFlag==1)                        //更新障碍物列表
   {
     sendListFlag=0;
     sendEnd();
