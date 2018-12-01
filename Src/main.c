@@ -76,10 +76,27 @@ uint8_t sendListPage = 0;
 uint16_t List[160];
 
 uint8_t timeFlag = 0;
+
+
+typedef enum {FAILED = 0, PASSED = !FAILED} TestStatus;
+/* 私有宏定义 ----------------------------------------------------------------*/
+#define BLOCK_SIZE            512         // SD卡块大小     
+#define NUMBER_OF_BLOCKS      8           // 测试块数量(小于15)
+#define WRITE_READ_ADDRESS    0x00002000  // 测试读写地址
+ 
+/* 私有变量 ------------------------------------------------------------------*/
+__align(4) uint32_t Buffer_Block_Tx[BLOCK_SIZE*NUMBER_OF_BLOCKS]; // 写数据缓存
+__align(4) uint32_t Buffer_Block_Rx[BLOCK_SIZE*NUMBER_OF_BLOCKS]; // 读数据缓存
+HAL_StatusTypeDef sd_status;    // HAL库函数操作SD卡函数返回值：操作结果
+TestStatus test_status;           // 数据测试结果
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void SD_EraseTest(void);
+void SD_Write_Read_Test(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -145,6 +162,9 @@ int main(void)
   sendEnd();
   printf("page 0");                                             //初始化串口屏
   sendEnd();
+  
+  SD_EraseTest();
+  SD_Write_Read_Test();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -307,7 +327,151 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
         }
      } 
 } 
-
+/**
+  * 函数功能: 检查缓冲区的数据是否为0xff或0
+  * 输入参数: pBuffer：要比较的缓冲区的指针
+  *           BufferLength：缓冲区长度
+  * 返 回 值: PASSED：缓冲区的数据全为0xff或0
+  *           FAILED：缓冲区的数据至少有一个不为0xff或0 
+  * 说    明: 无
+  */
+TestStatus eBuffercmp(uint32_t* pBuffer, uint32_t BufferLength)
+{
+  while (BufferLength--)
+  {
+    /* SD卡擦除后的可能值为0xff或0 */
+    if ((*pBuffer != 0xFFFFFFFF) && (*pBuffer != 0))
+    {
+      return FAILED;
+    }
+    pBuffer++;
+  }
+  return PASSED;
+}
+ 
+/**
+  * 函数功能: SD卡擦除测试
+  * 输入参数: 无
+  * 返 回 值: 无
+  * 说    明: 无
+  */
+void SD_EraseTest(void)
+{
+	/* 第1个参数为SD卡句柄，第2个参数为擦除起始地址，第3个参数为擦除结束地址 */
+  sd_status=HAL_SD_Erase(&hsd,WRITE_READ_ADDRESS,WRITE_READ_ADDRESS+NUMBER_OF_BLOCKS*4);
+   printf("erase status:%d\r\n",sd_status);
+ 
+	HAL_Delay(500);
+  if (sd_status == HAL_OK)
+  {	
+    /* 读取刚刚擦除的区域 */
+    sd_status = HAL_SD_ReadBlocks(&hsd,(uint8_t *)Buffer_Block_Rx,WRITE_READ_ADDRESS,NUMBER_OF_BLOCKS,0xffff);
+    printf("erase read status:%d\r\n",sd_status);
+    /* 把擦除区域读出来对比 */
+    test_status = eBuffercmp(Buffer_Block_Rx,BLOCK_SIZE*NUMBER_OF_BLOCKS);
+ 
+    if(test_status == PASSED)
+      printf("》擦除测试成功！\r\n" ); 
+    else	  
+      printf("》擦除不成功，数据出错！\r\n" );      
+  }
+  else
+  {
+    printf("》擦除测试失败！部分SD不支持擦除，只要读写测试通过即可\r\n" );
+  }
+}
+ 
+/**
+  * 函数功能: 在缓冲区中填写数据
+  * 输入参数: pBuffer：要填充的缓冲区
+  *           BufferLength：要填充的大小
+  *           Offset：填在缓冲区的第一个值 
+  * 返 回 值: 无
+  * 说    明: 无
+  */
+void Fill_Buffer(uint32_t *pBuffer, uint32_t BufferLength, uint32_t Offset)
+{
+  uint32_t index = 0;
+  /* 填充数据 */
+  for (index = 0; index < BufferLength; index++ )
+  {
+    pBuffer[index] = index + Offset;
+  }
+}
+ 
+/**
+  * 函数功能: 比较两个缓冲区中的数据是否相等
+  * 输入参数: pBuffer1：要比较的缓冲区1的指针
+  *           pBuffer2：要比较的缓冲区2的指针
+  *           BufferLength：缓冲区长度
+  * 返 回 值: PASSED：相等
+  *           FAILED：不等
+  * 说    明: 无
+  */
+TestStatus Buffercmp(uint32_t* pBuffer1, uint32_t* pBuffer2, uint32_t BufferLength)
+{
+  while (BufferLength--)
+  {
+    if(BufferLength%50==0)
+    {
+      printf("buf:0x%08X - 0x%08X\r\n",*pBuffer1,*pBuffer2);
+    }
+    if (*pBuffer1 != *pBuffer2)
+    {
+      return FAILED;
+    }
+    pBuffer1++;
+    pBuffer2++;
+  }
+  return PASSED;
+}
+ 
+/**
+  * 函数功能: SD卡读写测试
+  * 输入参数: 无
+  * 返 回 值: 无
+  * 说    明: 无
+  */
+void SD_Write_Read_Test(void)
+{  
+	int i,j = 0;
+  /* 填充数据到写缓存 */
+  Fill_Buffer(Buffer_Block_Tx,BLOCK_SIZE*NUMBER_OF_BLOCKS, 0x6666);
+  
+  /* 往SD卡写入数据 */
+  sd_status = HAL_SD_WriteBlocks(&hsd,(uint8_t *)Buffer_Block_Tx,WRITE_READ_ADDRESS,NUMBER_OF_BLOCKS,0xffff);
+  printf("write status:%d\r\n",sd_status);
+			
+  HAL_Delay(500);
+  /* 从SD卡读取数据 */
+  sd_status = HAL_SD_ReadBlocks(&hsd,(uint8_t *)Buffer_Block_Rx,WRITE_READ_ADDRESS,NUMBER_OF_BLOCKS,0xffff);
+  printf("read status:%d\r\n",sd_status);
+  
+  /* 比较数据 */
+  test_status = Buffercmp(Buffer_Block_Tx, Buffer_Block_Rx, BLOCK_SIZE*NUMBER_OF_BLOCKS/4);	//比较
+  if(test_status == PASSED)
+	{
+    printf("》读写测试成功！\r\n" );
+		
+		for(i=0;i<BLOCK_SIZE*NUMBER_OF_BLOCKS/4;i++)
+		{
+			if(j==8)
+			{
+				printf("\r\n");
+				j=0;
+			}
+			
+			printf("%08x   ",Buffer_Block_Rx[i]);
+			j++;
+		}
+		printf("\r\n");
+	}
+  else  
+  	printf("》读写测试失败！\r\n " );  
+}
+/*
+*printf函数输出重定向
+*/
 int fputc(int ch, FILE *f)
 {
     HAL_UART_Transmit(&huart1, (uint8_t*)&ch ,1, 0xffff);
