@@ -3,6 +3,9 @@
 "probecar\control.o"
 "probecar\main.o"
 "probecar\gpio.o"
+"probecar\dma.o"
+"probecar\bsp_driver_sd.o"
+"probecar\fatfs.o"
 "probecar\sdio.o"
 "probecar\tim.o"
 "probecar\usart.o"
@@ -24,6 +27,12 @@
 "probecar\stm32f1xx_hal_flash.o"
 "probecar\stm32f1xx_hal_flash_ex.o"
 "probecar\system_stm32f1xx.o"
+"probecar\syscall.o"
+"probecar\cc936.o"
+"probecar\sd_diskio.o"
+"probecar\diskio.o"
+"probecar\ff.o"
+"probecar\ff_gen_drv.o"
 --library_type=microlib --strict --scatter "ProbeCar\ProbeCar.sct"
 --summary_stderr --info summarysizes --map --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

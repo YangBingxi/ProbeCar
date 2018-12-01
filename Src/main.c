@@ -4,41 +4,54 @@
   * @file           : main.c
   * @brief          : Main program body
   ******************************************************************************
-  ** This notice applies to any and all portions of this file
+  * This notice applies to any and all portions of this file
   * that are not between comment pairs USER CODE BEGIN and
   * USER CODE END. Other portions of this file, whether 
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * COPYRIGHT(c) 2018 STMicroelectronics
+  * Copyright (c) 2018 STMicroelectronics International N.V. 
+  * All rights reserved.
   *
-  * Redistribution and use in source and binary forms, with or without modification,
-  * are permitted provided that the following conditions are met:
-  *   1. Redistributions of source code must retain the above copyright notice,
-  *      this list of conditions and the following disclaimer.
-  *   2. Redistributions in binary form must reproduce the above copyright notice,
-  *      this list of conditions and the following disclaimer in the documentation
-  *      and/or other materials provided with the distribution.
-  *   3. Neither the name of STMicroelectronics nor the names of its contributors
-  *      may be used to endorse or promote products derived from this software
-  *      without specific prior written permission.
+  * Redistribution and use in source and binary forms, with or without 
+  * modification, are permitted, provided that the following conditions are met:
   *
-  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  * 1. Redistribution of source code must retain the above copyright notice, 
+  *    this list of conditions and the following disclaimer.
+  * 2. Redistributions in binary form must reproduce the above copyright notice,
+  *    this list of conditions and the following disclaimer in the documentation
+  *    and/or other materials provided with the distribution.
+  * 3. Neither the name of STMicroelectronics nor the names of other 
+  *    contributors to this software may be used to endorse or promote products 
+  *    derived from this software without specific written permission.
+  * 4. This software, including modifications and/or derivative works of this 
+  *    software, must execute solely and exclusively on microcontroller or
+  *    microprocessor devices manufactured by or for STMicroelectronics.
+  * 5. Redistribution and use of this software other than as permitted under 
+  *    this license is void and will automatically terminate your rights under 
+  *    this license. 
+  *
+  * THIS SOFTWARE IS PROVIDED BY STMICROELECTRONICS AND CONTRIBUTORS "AS IS" 
+  * AND ANY EXPRESS, IMPLIED OR STATUTORY WARRANTIES, INCLUDING, BUT NOT 
+  *
+  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS FOR A 
+  * PARTICULAR PURPOSE AND NON-INFRINGEMENT OF THIRD PARTY INTELLECTUAL PROPERTY
+  * RIGHTS ARE DISCLAIMED TO THE FULLEST EXTENT PERMITTED BY LAW. IN NO EVENT 
+  * SHALL STMICROELECTRONICS OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+  * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+  * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, 
+  * OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF 
+  * LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
+  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
+  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
   *
   ******************************************************************************
   */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f1xx_hal.h"
+#include "dma.h"
+#include "fatfs.h"
 #include "sdio.h"
 #include "tim.h"
 #include "usart.h"
@@ -46,6 +59,7 @@
 
 /* USER CODE BEGIN Includes */
 #include "led.h"
+#include "stdio.h"
 #include "control.h"
 /* USER CODE END Includes */
 
@@ -90,16 +104,28 @@ __align(4) uint32_t Buffer_Block_Rx[BLOCK_SIZE*NUMBER_OF_BLOCKS]; // 读数据缓存
 HAL_StatusTypeDef sd_status;    // HAL库函数操作SD卡函数返回值：操作结果
 TestStatus test_status;           // 数据测试结果
 
+FATFS fs;                 // Work area (file system object) for logical drive
+	FIL fil;                  // file objects
+	uint32_t byteswritten;                /* File write counts */
+	uint32_t bytesread;                   /* File read counts */
+	uint8_t wtext[] = "This is STM32 working with FatFs"; /* File write buffer */
+	uint8_t rtext[100];                     /* File read buffers */
+	char filename[] = "STM32cube.txt";
+extern DMA_HandleTypeDef hdma_sdio;
 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-void SD_EraseTest(void);
-void SD_Write_Read_Test(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
+void SD_EraseTest(void);
+void SD_Write_Read_Test(void);
+void Fatfs_RW_test(void);
+HAL_StatusTypeDef SD_DMAConfigRx(SD_HandleTypeDef *hsd);
+HAL_StatusTypeDef SD_DMAConfigTx(SD_HandleTypeDef *hsd);
+
 
 /* USER CODE END PFP */
 
@@ -136,12 +162,14 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_TIM6_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   MX_TIM5_Init();
   MX_SDIO_SD_Init();
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
 	//HAL_UART_Receive_IT(&huart1, (uint8_t *)&aRxBuffer_1, 1);   //开启串口接收中断
 	HAL_UART_Receive_IT(&huart2, (uint8_t *)&aRxBuffer_2, 1);     //开启串口接收中断
@@ -163,8 +191,10 @@ int main(void)
   printf("page 0");                                             //初始化串口屏
   sendEnd();
   
-  SD_EraseTest();
-  SD_Write_Read_Test();
+//  SD_EraseTest();
+//  SD_Write_Read_Test();  3
+    Fatfs_RW_test();
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -365,7 +395,7 @@ void SD_EraseTest(void)
   if (sd_status == HAL_OK)
   {	
     /* 读取刚刚擦除的区域 */
-    sd_status = HAL_SD_ReadBlocks(&hsd,(uint8_t *)Buffer_Block_Rx,WRITE_READ_ADDRESS,NUMBER_OF_BLOCKS,0xffff);
+    sd_status = HAL_SD_ReadBlocks_DMA(&hsd,(uint8_t *)Buffer_Block_Rx,WRITE_READ_ADDRESS,NUMBER_OF_BLOCKS);
     printf("erase read status:%d\r\n",sd_status);
     /* 把擦除区域读出来对比 */
     test_status = eBuffercmp(Buffer_Block_Rx,BLOCK_SIZE*NUMBER_OF_BLOCKS);
@@ -439,12 +469,12 @@ void SD_Write_Read_Test(void)
   Fill_Buffer(Buffer_Block_Tx,BLOCK_SIZE*NUMBER_OF_BLOCKS, 0x6666);
   
   /* 往SD卡写入数据 */
-  sd_status = HAL_SD_WriteBlocks(&hsd,(uint8_t *)Buffer_Block_Tx,WRITE_READ_ADDRESS,NUMBER_OF_BLOCKS,0xffff);
+  sd_status = HAL_SD_WriteBlocks_DMA(&hsd,(uint8_t *)Buffer_Block_Tx,WRITE_READ_ADDRESS,NUMBER_OF_BLOCKS);
   printf("write status:%d\r\n",sd_status);
 			
   HAL_Delay(500);
   /* 从SD卡读取数据 */
-  sd_status = HAL_SD_ReadBlocks(&hsd,(uint8_t *)Buffer_Block_Rx,WRITE_READ_ADDRESS,NUMBER_OF_BLOCKS,0xffff);
+  sd_status = HAL_SD_ReadBlocks_DMA(&hsd,(uint8_t *)Buffer_Block_Rx,WRITE_READ_ADDRESS,NUMBER_OF_BLOCKS);
   printf("read status:%d\r\n",sd_status);
   
   /* 比较数据 */
@@ -469,14 +499,167 @@ void SD_Write_Read_Test(void)
   else  
   	printf("》读写测试失败！\r\n " );  
 }
+void Fatfs_RW_test(void)
+{
+	  printf("\r\n ****** FatFs Example ******\r\n\r\n");
+ 
+    /*##-1- Register the file system object to the FatFs module ##############*/
+    retSD = f_mount(&fs, "", 1);
+    if(retSD)
+    {
+        printf(" mount error : %d \r\n",retSD);
+        Error_Handler();
+    }
+    else
+        printf(" mount sucess!!! \r\n");
+     
+    /*##-2- Create and Open new text file objects with write access ######*/
+    retSD = f_open(&fil, filename, FA_CREATE_ALWAYS | FA_WRITE);
+    if(retSD)
+        printf(" open file error : %d\r\n",retSD);
+    else
+        printf(" open file sucess!!! \r\n");
+     
+    /*##-3- Write data to the text files ###############################*/
+    retSD = f_write(&fil, wtext, sizeof(wtext), (void *)&byteswritten);
+    if(retSD)
+        printf(" write file error : %d\r\n",retSD);
+    else
+    {
+        printf(" write file sucess!!! \r\n");
+        printf(" write Data : %s\r\n",wtext);
+    }
+     
+    /*##-4- Close the open text files ################################*/
+    retSD = f_close(&fil);
+    if(retSD)
+        printf(" close error : %d\r\n",retSD);
+    else
+        printf(" close sucess!!! \r\n");
+     
+    /*##-5- Open the text files object with read access ##############*/
+    retSD = f_open(&fil, filename, FA_READ);
+    if(retSD)
+        printf(" open file error : %d\r\n",retSD);
+    else
+        printf(" open file sucess!!! \r\n");
+     
+    /*##-6- Read data from the text files ##########################*/
+    retSD = f_read(&fil, rtext, sizeof(rtext), (UINT*)&bytesread);
+    if(retSD)
+        printf(" read error!!! %d\r\n",retSD);
+    else
+    {
+        printf(" read sucess!!! \r\n");
+        printf(" read Data : %s\r\n",rtext);
+    }
+     
+    /*##-7- Close the open text files ############################*/
+    retSD = f_close(&fil);
+    if(retSD)  
+        printf(" close error!!! %d\r\n",retSD);
+    else
+        printf(" close sucess!!! \r\n");
+     
+    /*##-8- Compare read data with the expected data ############*/
+    if(bytesread == byteswritten)
+    { 
+        printf(" FatFs is working well!!!\r\n");
+    }
+}
+/**
+  * @brief Configure the DMA to receive data from the SD card
+  * @retval
+  *  HAL_ERROR or HAL_OK
+  */
+HAL_StatusTypeDef SD_DMAConfigRx(SD_HandleTypeDef *hsd)
+{
+  HAL_StatusTypeDef status = HAL_ERROR;
+  
+  /* Configure DMA Rx parameters */
+  hdma_sdio.Instance = DMA2_Channel4;
+	hdma_sdio.Init.Direction = DMA_PERIPH_TO_MEMORY;
+	hdma_sdio.Init.PeriphInc = DMA_PINC_DISABLE;
+	hdma_sdio.Init.MemInc = DMA_MINC_ENABLE;
+	hdma_sdio.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
+	hdma_sdio.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
+	hdma_sdio.Init.Mode = DMA_NORMAL;
+  hdma_sdio.Init.Priority = DMA_PRIORITY_LOW;
+ 
+  /* Associate the DMA handle */
+  __HAL_LINKDMA(hsd,hdmarx,hdma_sdio);
+ 
+  /* Stop any ongoing transfer and reset the state*/
+  HAL_DMA_Abort(&hdma_sdio);
+  
+  /* Deinitialize the Channel for new transfer */
+  HAL_DMA_DeInit(&hdma_sdio);//注意这里！！！DeInit的是另一个通道！！！
+ 
+  /* Configure the DMA Channel */
+  status = HAL_DMA_Init(&hdma_sdio);
+    
+  return (status);
+}
+ 
+/**
+  * @brief Configure the DMA to transmit data to the SD card
+  * @retval
+  *  HAL_ERROR or HAL_OK
+  */
+HAL_StatusTypeDef SD_DMAConfigTx(SD_HandleTypeDef *hsd)
+{
+  HAL_StatusTypeDef status;
+  
+  /* SDMMC1_TX Init */
+	hdma_sdio.Instance = DMA2_Channel4;
+	hdma_sdio.Init.Direction = DMA_MEMORY_TO_PERIPH;
+	hdma_sdio.Init.PeriphInc = DMA_PINC_DISABLE;
+	hdma_sdio.Init.MemInc = DMA_MINC_ENABLE;
+	hdma_sdio.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
+	hdma_sdio.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
+	hdma_sdio.Init.Mode = DMA_NORMAL;//这里NORMAL或其他都可以，无所谓
+	hdma_sdio.Init.Priority = DMA_PRIORITY_LOW;
+ 
+  /* Associate the DMA handle */
+  __HAL_LINKDMA(hsd, hdmatx, hdma_sdio);
+  
+  /* Stop any ongoing transfer and reset the state*/
+  HAL_DMA_Abort(&hdma_sdio);
+  
+  /* Deinitialize the Channel for new transfer */
+  HAL_DMA_DeInit(&hdma_sdio);  //注意这里！！！DeInit的是另一个通道！！！
+  
+  /* Configure the DMA Channel */
+  status = HAL_DMA_Init(&hdma_sdio); 
+ 
+  return (status);
+}
 /*
 *printf函数输出重定向
 */
+//加入以下代码,支持printf函数，使用printf函数从串口输出。
+#if 1
+#pragma import(__use_no_semihosting)             
+//标准库需要的支持函数                 
+struct __FILE 
+{ 
+	int handle; 
+}; 
+ 
+FILE __stdout;       
+//定义_sys_exit()以避免使用半主机模式    
+void _sys_exit(int x) 
+{ 
+	x = x; 
+} 
+//重定义fputc函数 
 int fputc(int ch, FILE *f)
-{
-    HAL_UART_Transmit(&huart1, (uint8_t*)&ch ,1, 0xffff);
-      return ch;
+{ 	
+	while((USART1->SR&0X40)==0);//循环发送,直到发送完毕   
+	USART1->DR=(uint8_t)ch;      
+	return ch;
 }
+#endif 
 /* USER CODE END 4 */
 
 /**

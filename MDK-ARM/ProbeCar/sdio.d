@@ -30,3 +30,4 @@ probecar\sdio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
 probecar\sdio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 probecar\sdio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
 probecar\sdio.o: ../Inc/gpio.h
+probecar\sdio.o: ../Inc/dma.h

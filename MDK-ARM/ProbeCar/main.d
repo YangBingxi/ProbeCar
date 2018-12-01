@@ -29,6 +29,15 @@ probecar\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_ll_sdmmc.h
 probecar\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
 probecar\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 probecar\main.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
+probecar\main.o: ../Inc/dma.h
+probecar\main.o: ../Inc/fatfs.h
+probecar\main.o: ../Middlewares/Third_Party/FatFs/src/ff.h
+probecar\main.o: ../Middlewares/Third_Party/FatFs/src/integer.h
+probecar\main.o: ../Inc/ffconf.h
+probecar\main.o: ../Inc/bsp_driver_sd.h
+probecar\main.o: ../Middlewares/Third_Party/FatFs/src/ff_gen_drv.h
+probecar\main.o: ../Middlewares/Third_Party/FatFs/src/diskio.h
+probecar\main.o: ../Middlewares/Third_Party/FatFs/src/drivers/sd_diskio.h
 probecar\main.o: ../Inc/sdio.h
 probecar\main.o: ../Inc/tim.h
 probecar\main.o: ../Inc/usart.h
