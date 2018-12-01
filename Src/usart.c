@@ -285,7 +285,8 @@ extern uint8_t Uart3_Rx_Cnt;		                  //接收缓冲计数
 extern uint16_t Height;
 extern uint16_t HeightArray[12];
 extern uint8_t carStatus;
-extern uint8_t sendListFlag,sendListPage;
+extern uint8_t sendListFlag;
+extern uint32_t sendListPage;
 extern uint8_t timeFlag;
 uint16_t strength,check;
 uint8_t i;
@@ -354,7 +355,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
       if(Uart2_RxBuff[Uart2_Rx_Cnt-1]==0x72)                 //判断控制命令起始位（拟定起始位0x66）
       {
         sendListFlag = 1;    //查询列表下一页
-        if(sendListPage<9)
+        if(sendListPage<99999)
           sendListPage ++;
       }       
     }

@@ -11,9 +11,10 @@
   *   2018.11.27
   */
 extern float carSpeed,carDistance;          //定义小车速度、小车里程
-uint8_t sendListCounter = 0;
+uint32_t sendListCounter = 0;
 extern uint16_t List[160];                  //障碍物位置存储列表
 extern uint8_t probeStatus;                 //检测状态,默认无障碍
+extern uint8_t SD_SendData[20];             //写入SD卡文件列表
 void barrierScan()
 {
   if(BarrierStatus)
@@ -30,8 +31,9 @@ void barrierScan()
       sendEnd();
       printf("t5.txt=\"有障碍\"");
       sendEnd();
-      if(sendListCounter<160)
+      if(sendListCounter<1600000)
         List[sendListCounter]=carDistance;   //存储障碍物位置
+      writeToSD(sendListCounter,(int)carDistance,SD_SendData); //将障碍物的位置写入sd卡
       sendListCounter++;
     }while(BarrierStatus);
   }
@@ -185,7 +187,7 @@ void updateData(void)
   {
     sendListFlag=0;
     sendEnd();
-    printf("t300.txt=\"%d/10\"",sendListPage); sendEnd();
+    printf("t300.txt=\"%d/1000\"",sendListPage); sendEnd();
     
     printf("t200.txt=\"1: %d\"",List[sendListPage*16+0]); sendEnd();
     printf("t201.txt=\"2: %d\"",List[sendListPage*16+1]); sendEnd();

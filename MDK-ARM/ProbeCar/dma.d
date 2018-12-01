@@ -4,12 +4,12 @@ probecar\dma.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
 probecar\dma.o: ../Inc/stm32f1xx_hal_conf.h
 probecar\dma.o: ../Inc/main.h
 probecar\dma.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h
+probecar\dma.o: D:\Project_Program\Keil5_MDK\ARM\ARMCC\Bin\..\include\stdint.h
 probecar\dma.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_rcc.h
 probecar\dma.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_def.h
 probecar\dma.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f1xx.h
 probecar\dma.o: ../Drivers/CMSIS/Device/ST/STM32F1xx/Include/stm32f103xe.h
 probecar\dma.o: ../Drivers/CMSIS/Include/core_cm3.h
-probecar\dma.o: D:\Project_Program\Keil5_MDK\ARM\ARMCC\Bin\..\include\stdint.h
 probecar\dma.o: ../Drivers/CMSIS/Include/core_cmInstr.h
 probecar\dma.o: ../Drivers/CMSIS/Include/cmsis_armcc.h
 probecar\dma.o: ../Drivers/CMSIS/Include/core_cmFunc.h

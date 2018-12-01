@@ -55,7 +55,7 @@
 #include "stm32f1xx_hal.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "stdint.h"
 /* USER CODE END Includes */
 
 /* Private define ------------------------------------------------------------*/
@@ -87,7 +87,10 @@
 /* #define USE_FULL_ASSERT    1U */
 
 /* USER CODE BEGIN Private defines */
-
+void SD_EraseTest(void);
+void SD_Write_Read_Test(void);
+void Fatfs_RW_test(void);
+void writeToSD(uint32_t Counter,uint32_t Distance,uint8_t Array[]);
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

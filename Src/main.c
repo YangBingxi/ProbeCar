@@ -86,7 +86,7 @@ float carSpeed,carSpeedLast,carDistance;    //定义小车速度、小车里程
 uint8_t carStatus = 0;                      //小车状态,默认停止
 uint8_t probeStatus = 0;                    //检测状态,默认无障碍
 uint8_t sendListFlag = 0;
-uint8_t sendListPage = 0;
+uint32_t sendListPage = 0;
 uint16_t List[160];
 
 uint8_t timeFlag = 0;
@@ -122,10 +122,7 @@ void SystemClock_Config(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-void SD_EraseTest(void);
-void SD_Write_Read_Test(void);
-void Fatfs_RW_test(void);
-void writeToSD(uint32_t Counter,uint32_t Distance,uint8_t Array[]);
+
 HAL_StatusTypeDef SD_DMAConfigRx(SD_HandleTypeDef *hsd);
 HAL_StatusTypeDef SD_DMAConfigTx(SD_HandleTypeDef *hsd);
 
@@ -144,7 +141,7 @@ HAL_StatusTypeDef SD_DMAConfigTx(SD_HandleTypeDef *hsd);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  uint32_t ulTmrClk, ulTime,t;
+  uint32_t ulTmrClk, ulTime;
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -193,11 +190,15 @@ int main(void)
   sendEnd();
   printf("page 0");                                             //初始化串口屏
   sendEnd();
-  
+  HAL_Delay(1000);HAL_Delay(1000);HAL_Delay(1000);HAL_Delay(1000);
+  printf("t12.txt=\"SD卡错误！请检查SD卡\"");                                             //初始化串口屏
+  sendEnd();
 //  SD_EraseTest();
 //  SD_Write_Read_Test();  3
-    Fatfs_RW_test();
-
+  Fatfs_RW_test();
+  sendEnd();
+  printf("t12.txt=\"中铁障碍物探测车\"");                                             //初始化串口屏
+  sendEnd();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -224,8 +225,8 @@ int main(void)
     HAL_Delay(200);                                             //系统延时
     
     
-    t++;
-    writeToSD(t,t,SD_SendData);
+//    t++;
+//    writeToSD(t,t,SD_SendData);
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -536,7 +537,15 @@ void Fatfs_RW_test(void)
         printf(" write file sucess!!! \r\n");
         printf(" write Data : %s\r\n",wtext);
     }
-     
+    f_lseek(&fil,f_size(&fil));
+    retSD = f_write(&fil, "\r\n---编号---位置---", sizeof("\r\n---编号---位置---"), (void *)&byteswritten);
+    if(retSD)
+        printf(" write file error : %d\r\n",retSD);
+    else
+    {
+        printf(" write file sucess!!! \r\n");
+        printf(" write Data : %s\r\n",wtext);
+    }
     /*##-4- Close the open text files ################################*/
     retSD = f_close(&fil);
     if(retSD)
