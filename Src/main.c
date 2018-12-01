@@ -39,6 +39,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f1xx_hal.h"
+#include "sdio.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -123,6 +124,7 @@ int main(void)
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   MX_TIM5_Init();
+  MX_SDIO_SD_Init();
   /* USER CODE BEGIN 2 */
 	//HAL_UART_Receive_IT(&huart1, (uint8_t *)&aRxBuffer_1, 1);   //开启串口接收中断
 	HAL_UART_Receive_IT(&huart2, (uint8_t *)&aRxBuffer_2, 1);     //开启串口接收中断
