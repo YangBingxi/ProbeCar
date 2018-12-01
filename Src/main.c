@@ -105,12 +105,14 @@ HAL_StatusTypeDef sd_status;    // HAL库函数操作SD卡函数返回值：操作结果
 TestStatus test_status;           // 数据测试结果
 
 FATFS fs;                 // Work area (file system object) for logical drive
-	FIL fil;                  // file objects
-	uint32_t byteswritten;                /* File write counts */
-	uint32_t bytesread;                   /* File read counts */
-	uint8_t wtext[] = "This is STM32 working with FatFs"; /* File write buffer */
-	uint8_t rtext[100];                     /* File read buffers */
-	char filename[] = "STM32cube.txt";
+FIL fil;                  // file objects
+uint32_t byteswritten;                /* File write counts */
+uint32_t bytesread;                   /* File read counts */
+uint8_t wtext[] = "障碍物检测位置列表"; /* File write buffer */
+uint8_t SD_SendData[20] = {'\r','\n',' ',' ',' ',' ',' ',' ',':',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' '};
+/*---------------------------0----1---2---3---4---5---6---7---8---9--10--11--12--13--14--15--16--17--18--19--*/
+uint8_t rtext[100];                     /* File read buffers */
+char filename[] = "障碍物检测位置列表.txt";
 extern DMA_HandleTypeDef hdma_sdio;
 
 /* USER CODE END PV */
@@ -123,6 +125,7 @@ void SystemClock_Config(void);
 void SD_EraseTest(void);
 void SD_Write_Read_Test(void);
 void Fatfs_RW_test(void);
+void writeToSD(uint32_t Counter,uint32_t Distance,uint8_t Array[]);
 HAL_StatusTypeDef SD_DMAConfigRx(SD_HandleTypeDef *hsd);
 HAL_StatusTypeDef SD_DMAConfigTx(SD_HandleTypeDef *hsd);
 
@@ -141,7 +144,7 @@ HAL_StatusTypeDef SD_DMAConfigTx(SD_HandleTypeDef *hsd);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  uint32_t ulTmrClk, ulTime;
+  uint32_t ulTmrClk, ulTime,t;
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -220,8 +223,9 @@ int main(void)
     LED_TOGGLE;                                                 //led翻转
     HAL_Delay(200);                                             //系统延时
     
-
-
+    
+    t++;
+    writeToSD(t,t,SD_SendData);
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
@@ -499,6 +503,9 @@ void SD_Write_Read_Test(void)
   else  
   	printf("》读写测试失败！\r\n " );  
 }
+/*
+*Fatfs文件系统读写测试
+*/
 void Fatfs_RW_test(void)
 {
 	  printf("\r\n ****** FatFs Example ******\r\n\r\n");
@@ -537,35 +544,35 @@ void Fatfs_RW_test(void)
     else
         printf(" close sucess!!! \r\n");
      
-    /*##-5- Open the text files object with read access ##############*/
-    retSD = f_open(&fil, filename, FA_READ);
-    if(retSD)
-        printf(" open file error : %d\r\n",retSD);
-    else
-        printf(" open file sucess!!! \r\n");
-     
-    /*##-6- Read data from the text files ##########################*/
-    retSD = f_read(&fil, rtext, sizeof(rtext), (UINT*)&bytesread);
-    if(retSD)
-        printf(" read error!!! %d\r\n",retSD);
-    else
-    {
-        printf(" read sucess!!! \r\n");
-        printf(" read Data : %s\r\n",rtext);
-    }
-     
-    /*##-7- Close the open text files ############################*/
-    retSD = f_close(&fil);
-    if(retSD)  
-        printf(" close error!!! %d\r\n",retSD);
-    else
-        printf(" close sucess!!! \r\n");
-     
-    /*##-8- Compare read data with the expected data ############*/
-    if(bytesread == byteswritten)
-    { 
-        printf(" FatFs is working well!!!\r\n");
-    }
+//    /*##-5- Open the text files object with read access ##############*/
+//    retSD = f_open(&fil, filename, FA_READ);
+//    if(retSD)
+//        printf(" open file error : %d\r\n",retSD);
+//    else
+//        printf(" open file sucess!!! \r\n");
+//     
+//    /*##-6- Read data from the text files ##########################*/
+//    retSD = f_read(&fil, rtext, sizeof(rtext), (UINT*)&bytesread);
+//    if(retSD)
+//        printf(" read error!!! %d\r\n",retSD);
+//    else
+//    {
+//        printf(" read sucess!!! \r\n");
+//        printf(" read Data : %s\r\n",rtext);
+//    }
+//     
+//    /*##-7- Close the open text files ############################*/
+//    retSD = f_close(&fil);
+//    if(retSD)  
+//        printf(" close error!!! %d\r\n",retSD);
+//    else
+//        printf(" close sucess!!! \r\n");
+//     
+//    /*##-8- Compare read data with the expected data ############*/
+//    if(bytesread == byteswritten)
+//    { 
+//        printf(" FatFs is working well!!!\r\n");
+//    }
 }
 /**
   * @brief Configure the DMA to receive data from the SD card
@@ -633,6 +640,47 @@ HAL_StatusTypeDef SD_DMAConfigTx(SD_HandleTypeDef *hsd)
   status = HAL_DMA_Init(&hdma_sdio); 
  
   return (status);
+}
+
+void writeToSD(uint32_t Counter,uint32_t Distance,uint8_t Array[])
+{
+	Array[7]=Counter%10+48;
+  Array[6]=Counter/10%10+48;
+	Array[5]=Counter/100%10+48;
+	Array[4]=Counter/1000%10+48;
+	Array[3]=Counter/10000%10+48;
+	Array[2]=Counter/100000%10+48;
+	
+	Array[14]=Distance%10+48;
+    Array[13]=Distance/10%10+48;
+	Array[12]=Distance/100%10+48;
+	Array[11]=Distance/1000%10+48;
+	Array[10]=Distance/10000%10+48;
+	Array[9]=Distance/100000%10+48;
+	
+    retSD = f_open(&fil, filename, FA_WRITE);
+    f_lseek(&fil,f_size(&fil));
+    if(retSD)
+        printf(" open file error : %d\r\n",retSD);
+    else
+        printf(" open file sucess!!! \r\n");
+     
+    /*##-3- Write data to the text files ###############################*/
+    retSD = f_write(&fil, Array, 20, (void *)&byteswritten);
+    if(retSD)
+        printf(" write file error : %d\r\n",retSD);
+    else
+    {
+        printf(" write file sucess!!! \r\n");
+        printf(" write Data : %s\r\n",Array);
+    }
+     
+    /*##-4- Close the open text files ################################*/
+    retSD = f_close(&fil);
+    if(retSD)
+        printf(" close error : %d\r\n",retSD);
+    else
+        printf(" close sucess!!! \r\n");
 }
 /*
 *printf函数输出重定向
